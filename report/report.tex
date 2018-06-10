@@ -13,11 +13,84 @@
     Fernando Jorge Mota \\
     {\texttt{contato@fjorgemota.com}}
     \and
-    Lucas Finger Roman
+    Lucas Finger Roman \\
+    {\texttt{lfrfinger@gmail.com}}
 }
 \date{}
 
 \begin{document}
 
 \maketitle
+% \tebleofcontents
+\section{Requisitos funcionais}
+\begin{itemize}
+    \item Lançamento de \textit{smart contract} contendo informações do contrato do
+      trabalhador;
+    \item Lançamento de \textit{smart contract} em inicio de expediente do funcionário;
+    \item Lançamento de \textit{smart contract} em final de expediente do funcionário;
+    \item Lançamento de \textit{smart contract} de alteração de contrato de trabalho;
+    \item Lançamento de \textit{smart contract} de finalização do contrato de trabalho;
+    \item Lançamento de \textit{smart contract} de valor de hora extra;
+\end{itemize}
+
+\subsection{\textit{Smart contract} contendo informações do contrato do trabalhador}
+O sistema deve ser capaz de lançar um \textit{smart contract} contendo
+informações sobre o contrato do trabalhador com a empresa. O contrato deve
+conter informações tais como data de emissão, salário do funcionário, jornada
+mensal de trabalho, função, férias e
+circunstâncias especiais.
+
+\subsection{\textit{Smart contract} em inicio de expediente do funcionário}
+O sistema deve ser capaz de lançar um \textit{smart contract} contendo as
+informações relacionadas ao início do expediente por um trabalhador, de forma a
+ser possível computar a quantidade de horas trabalhadas.
+
+\subsection{\textit{Smart contract} em final de expediente do funcionário}
+O sistema deve ser capaz de lançar um \textit{smart contract} de final do
+experiemente do funcionário, podendo assim registrar a quantidade de horas trabalhadas.
+
+\subsection{\textit{Smart contract} de alteração de contrato de trabalho}
+O sistema deve ser capaz de mudar o contrato do trabalhador enquanto este
+ainda trabalhar para a empresa. Para tanto, deve ser capaz mudar informações
+pertinentes ao trabalho, tais como a jornada mensal de trabalho, a duração de férias,
+a função do funcionário e as circunstâncias especiais. Não deve ser possível modificar
+informações tais como o CPF do funcionário, a data de nascimento de funcionário
+nem demais informações que não fazem parte do acordo entre o empregado e o
+empregador. Além disso, eventuais modificações devem ter suas datas anotadas.
+
+\subsection{\textit{Smart contract} de finalização do contrato de trabalho}
+O sistema deve possuir a funcionalidade de finalizar o contrato de um empregado
+com seu empregador, seja por demissão por justa causa ou por outro motivo.
+Porém, como este tipo de informação serve para denegrir a imagem do trabalhador,
+o motivo da revogação do contrato não deve estar listada no \textit{smart contract}.
+
+\subsection{\textit{Smart contract} de valor de hora extra}
+O sistema deve possuir o valor a ser pago por hora extra do funcionário com base em
+um percentual de seu salário base por hora. Desta forma, tendo em mãos a quantidade de horas
+trabalhadas pelo funcionário e comparando com sua jornada de trabalho, é possível calcular
+o valor a ser recebido de hora extra.
+
+
+\section{Requisitos não-funcionais}
+\begin{itemize}
+    \item Usar Ethereum como plataforma de \textit{blockchain};
+    \item Usar Solidity como linguagem de programação.
+\end{itemize}
+
+\subsection{Usar Ethereum com plataforma de \textit{blockchain}}
+Ethereum é a plataforma de computação distribuída baseada em \textit{blockchain} com integração de \textit{smart contracts}, que pode ser escrito em variadas
+linguagens de programação.
+
+\subsection{Usar Solidity como linguagem de programação}
+Será usada a linguagem \textit{Solidity}, que é orientada a contratos desenvolvida para
+escrever \textit{smart contracts} e que suporta variadas implementações de \textit{blockchain}, incluindo a o próprio Ethereum.
+
+\section{Critérios de sucesso}
+\begin{itemize}
+    \item Implementação de pelo menos 5 dos 6 requisitos funcionais definidos;
+    \item Conseguir computar valor a ser pago ao trabalhador a partir das horas
+      trabalhadas e seus respectivos tipos, usando-se das informações presentes
+      no contrato de trabalho e de inicio e fim do expediente;
+    \item Computar atributos derivados diretamente dos contratos;
+\end{itemize}
 \end{document}
