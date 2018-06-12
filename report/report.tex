@@ -21,35 +21,21 @@
 \begin{document}
 
 \maketitle
-% \tebleofcontents
+\tableofcontents{}
 \section{Requisitos funcionais}
-\begin{itemize}
-    \item Lançamento de \textit{smart contract} contendo informações do contrato do
-      trabalhador;
-    \item Lançamento de \textit{smart contract} em inicio de expediente do funcionário;
-    \item Lançamento de \textit{smart contract} em final de expediente do funcionário;
-    \item Lançamento de \textit{smart contract} de alteração de contrato de trabalho;
-    \item Lançamento de \textit{smart contract} de finalização do contrato de trabalho;
-    \item Lançamento de \textit{smart contract} de valor de hora extra;
-\end{itemize}
 
-\subsection{\textit{Smart contract} contendo informações do contrato do trabalhador}
+\subsection{Permitir a inserção informações do contrato do trabalhador pelo chefe}
 O sistema deve ser capaz de lançar um \textit{smart contract} contendo
 informações sobre o contrato do trabalhador com a empresa. O contrato deve
 conter informações tais como data de emissão, salário do funcionário, jornada
-mensal de trabalho, função, férias e
-circunstâncias especiais.
+mensal de trabalho, função, férias e circunstâncias especiais.
 
-\subsection{\textit{Smart contract} em inicio de expediente do funcionário}
+\subsection{Permitir a entrada de inicio/final do expediente pelo funcionário}
 O sistema deve ser capaz de lançar um \textit{smart contract} contendo as
-informações relacionadas ao início do expediente por um trabalhador, de forma a
-ser possível computar a quantidade de horas trabalhadas.
+informações relacionadas ao início e ao final do expediente de um trabalhador,
+de forma que seja possível computar as horas trabalhadas.
 
-\subsection{\textit{Smart contract} em final de expediente do funcionário}
-O sistema deve ser capaz de lançar um \textit{smart contract} de final do
-experiemente do funcionário, podendo assim registrar a quantidade de horas trabalhadas.
-
-\subsection{\textit{Smart contract} de alteração de contrato de trabalho}
+\subsection{Permitir a alteração de contrato de trabalho do funcionário pelo chefe}
 O sistema deve ser capaz de mudar o contrato do trabalhador enquanto este
 ainda trabalhar para a empresa. Para tanto, deve ser capaz mudar informações
 pertinentes ao trabalho, tais como a jornada mensal de trabalho, a duração de férias,
@@ -58,24 +44,20 @@ informações tais como o CPF do funcionário, a data de nascimento de funcioná
 nem demais informações que não fazem parte do acordo entre o empregado e o
 empregador. Além disso, eventuais modificações devem ter suas datas anotadas.
 
-\subsection{\textit{Smart contract} de finalização do contrato de trabalho}
+\subsection{Realizar ao chefe realizar a finalização do contrato de trabalho do funcionário}
 O sistema deve possuir a funcionalidade de finalizar o contrato de um empregado
 com seu empregador, seja por demissão por justa causa ou por outro motivo.
 Porém, como este tipo de informação serve para denegrir a imagem do trabalhador,
 o motivo da revogação do contrato não deve estar listada no \textit{smart contract}.
 
-\subsection{\textit{Smart contract} de valor de hora extra}
-O sistema deve possuir o valor a ser pago por hora extra do funcionário com base em
-um percentual de seu salário base por hora. Desta forma, tendo em mãos a quantidade de horas
-trabalhadas pelo funcionário e comparando com sua jornada de trabalho, é possível calcular
-o valor a ser recebido de hora extra.
-
+\subsection{Permitir ao chefe realizar a entrada de jornada de trabalho do funcionário}
+O sistema deve ser capaz de multiplicar o número de horas trabalhadas, caso elas
+ocorram em determinados períodos do dia ou caso o funcionário trabalhe em horas que exijam o pagamento de valores adicinais.
+Por exemplo, pode ser considerado que um trabalho realizado durante a madrugada
+tenha 1.2 vezes o valor de um trabalho realizado durante o período da tarde e que
+hora extra tenha um valor multiplicativo de 1.5 vezes em seu valor, de acordo com o definido pela lei trabalhista.
 
 \section{Requisitos não-funcionais}
-\begin{itemize}
-    \item Usar Ethereum como plataforma de \textit{blockchain};
-    \item Usar Solidity como linguagem de programação.
-\end{itemize}
 
 \subsection{Usar Ethereum com plataforma de \textit{blockchain}}
 Ethereum é a plataforma de computação distribuída baseada em \textit{blockchain} com integração de \textit{smart contracts}, que pode ser escrito em variadas
@@ -85,12 +67,30 @@ linguagens de programação.
 Será usada a linguagem \textit{Solidity}, que é orientada a contratos desenvolvida para
 escrever \textit{smart contracts} e que suporta variadas implementações de \textit{blockchain}, incluindo a o próprio Ethereum.
 
-\section{Critérios de sucesso}
+\subsection{Usar dados de autenticação das operações para checar se a operação é válida}
+O sistema deve garantir que quem está realizando determinada operação \textbf{possa} efetuá-la de fato. Por exemplo, funcionário não pode alterar seus dados do contrato de trabalho, funcionário não pode registrar entrada e saída de outro funcionário, e uma pessoa não pode registrar mudanças sem ser funcionário da empresa.
+
+\section{Dados Externos}
+Dados externos são as informações que são necessárias para o projeto, portanto, os dados de entrada. Em um \textit{smart contract} ele pode conter as informações a seguir, que depende de qual o tipo de \textit{smart contract} tratado:
 \begin{itemize}
-    \item Implementação de pelo menos 5 dos 6 requisitos funcionais definidos;
-    \item Conseguir computar valor a ser pago ao trabalhador a partir das horas
-      trabalhadas e seus respectivos tipos, usando-se das informações presentes
-      no contrato de trabalho e de inicio e fim do expediente;
-    \item Computar atributos derivados diretamente dos contratos;
+    \item Salário do funcionário;
+    \item Função do funcionário;
+    \item Nome do funcionário;
+    \item Jornada de trabalho do funcionário;
+    \item Férias do funcionário;
+    \item Circunstâncias especiais do funcionário;
+    \item Horário de início do expediente;
+    \item Horário de final do expediente.
+\end{itemize}
+
+\section{Critérios de sucesso}
+Para ser considerado um sucesso, o projeto deve ter critérios bem especificados e, em especial, precisa cumprí-los. No caso deste projeto, selecionamos os seguintes critérios:
+
+\begin{itemize}
+    \item Implementação dos \textit{smart contracts} necessários para a realização dos requisitos funcionais especificados;
+    \item Presença de comentários documentando o código criado para o projeto - para fins de manutenção posterior;
+    \item Conseguir computar valor a ser pago ao trabalhador a partir das horas trabalhadas e seus respectivos multiplicadores, usando-se das informações presentes no contrato de trabalho e nos dados de inicio e fim do expediente do funcionário;
+    \item Conseguir obter registro de horas trabalhadas de cada funcionário;
+    \item Computar atributos derivados diretamente dos contratos.
 \end{itemize}
 \end{document}
