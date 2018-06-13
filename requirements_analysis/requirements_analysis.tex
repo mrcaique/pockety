@@ -26,22 +26,22 @@
 
 \subsection{Permitir a inserção informações do contrato do trabalhador pelo
 chefe}
-O sistema deve ser capaz de lançar um \textit{smart contract} contendo
-informações sobre o contrato do trabalhador com a empresa. O contrato deve
-conter informações tais como data de emissão, salário do funcionário, jornada
-mensal de trabalho, função, férias e circunstâncias especiais.
+O sistema deve permitir a entrada de informações sobre o contrato do trabalhador
+com a empresa. O contrato deve conter informações tais como data de emissão,
+salário do funcionário,função, estado do funcionário (se em férias/licença, por
+exemplo) do funcionário e circunstâncias especiais.
 
 \subsection{Permitir a entrada de inicio/final do expediente pelo funcionário}
-O sistema deve ser capaz de lançar um \textit{smart contract} contendo as
-informações relacionadas ao início e ao final do expediente de um trabalhador,
-de forma que seja possível computar as horas trabalhadas.
+O sistema deve permitir a entrada de informações relacionadas ao início e ao
+final do expediente de um trabalhador, de forma que seja possível computar as
+horas trabalhadas.
 
 \subsection{Permitir a alteração de contrato de trabalho do funcionário pelo
 chefe}
 O sistema deve ser capaz de mudar o contrato do trabalhador enquanto este ainda
 trabalhar para a empresa. Para tanto, deve ser capaz mudar informações
-pertinentes ao trabalho, tais como a jornada mensal de trabalho, a duração de
-férias, a função do funcionário e as circunstâncias especiais. Não deve ser
+pertinentes ao trabalho, tais como o estado do funcionário na empresa a duração
+de férias, a função do funcionário e as circunstâncias especiais. Não deve ser
 possível modificar informações tais como o CPF do funcionário, a data de
 nascimento de funcionário nem demais informações que não fazem parte do acordo
 entre o empregado e o empregador. Além disso, eventuais modificações devem ter
@@ -84,6 +84,19 @@ O sistema deve garantir que quem está realizando determinada operação
 seus dados do contrato de trabalho, funcionário não pode registrar entrada e
 saída de outro funcionário, e uma pessoa não pode registrar mudanças sem ser
 funcionário da empresa.
+
+\subsection{Usar pouco gás do Ethereum}
+O sistema deve usar pouco gás da rede Ethereum, de forma que a execução seja
+rápida, eficiente e suporte um número grande de funcionários. Da mesma forma,
+isso permitirá diminuir o custo da execução do sistema, o que permite que o
+sistema seja adotado em diferentes empresas com diferentes tamanhos, como
+\textit{startups} com poucos recursos financeiros, por exemplo.
+
+\subsection{Funcionar em \textit{blockchain} privada}
+Por conter dados privados do funcionário, como salário do funcionário e nem
+remunerações extras, por exemplo, que não pode estar disponível publicamente
+pois pode provocar constrangimento aos funcionários e portanto pode causar
+punições na justiça para a empresa.
 
 \section{Dados Externos}
 Dados externos são as informações que são necessárias para o projeto, portanto,
