@@ -40,7 +40,7 @@ contract Journey {
         ];
         scheduler.scheduleTransaction(
             address(this),  // The address that the transaction will be sent to.
-            "",             // The call data that will be sent with the transaction.
+            msg.sender,             // The call data that will be sent with the transaction.
             255,            // The number of blocks this will be executable.
             uintArgs       // The tree args defined above
         );
@@ -51,17 +51,34 @@ contract Journey {
         // Além de computar as horas extras usando os multiplicadores
         // configurados
         // TODO: Precisamos dar um jeito de pegar o worker correspondente
+        address worker = msg.data;
         require(records[worker].state == StateType.IN);
         records[worker].realMinutes = records[worker].realMinutes+1;
+        // Se formos salvar no banco de horas, precisamos ignorar o seguinte bloco momentaneamente:
         if (records[worker].realMinutes > intervalo.min && records[worker].realMinutes < intervalo.max) {
             records[worker].computedMinutes += intervalo.multiplier;
         }
+        // Fazer schedule para incrementar workMinutes a cada 5 blocos
+        // Bloqueia por 1 minuto:
+        uint lockedUntil = block.number + 5;
+        uint[3] memory uintArgs = [
+            200000,      // the amount of gas that will be sent with the txn.
+            0,           // the amount of ether (in wei) that will be sent with the txn
+            lockedUntil // the first block number on which the transaction can be executed.
+        ];
+        scheduler.scheduleTransaction(
+            address(this),  // The address that the transaction will be sent to.
+            "",             // The call data that will be sent with the transaction.
+            255,            // The number of blocks this will be executable.
+            uintArgs       // The tree args defined above
+        );
     }
 
     // Precisa ser chamado em algum momento....talvez no final do mês ou algo
     // assim
     function clearRecord() public {
         require(records[msg.sender].state == StateType.OUT);
+        // Precisa computar quanto deve ser pago
         // TODO: Precisa PAGAR o que está no banco de horas
         // Precisa salvar apenas horas extras:
         records[msg.sender].hourBank = records[msg.sender].realMinutes - records[msg.sender].monthlyJourney;
