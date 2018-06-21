@@ -1,0 +1,14 @@
+A solution in blockchain and Ethereum platform, this project consists in a
+implementation of a time clock. The implementation was done using Solidity[1],
+a contract-oriented high-level language.
+
+This project aims, primarily, offer a simple time clock for management propouses
+using as little gas[2] as possible.
+
+The execution of the source code can be made online using Remix[3], a web
+browser based IDE. For more informations about the tool, refer to [4].
+
+[1] https://solidity.readthedocs.io/en/latest/ 
+[2] http://ethdocs.org/en/latest/contracts-and-transactions/account-types-gas-and-transactions.html#what-is-gas
+[2] https://remix.ethereum.org/
+[3] https://remix.readthedocs.io/en/latest/
