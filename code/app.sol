@@ -19,19 +19,11 @@ contract Journey {
         uint enteredAt; //!< Time that the employee entered
     }
 
-    uint private clk; //!< Demands the passage of time through the use of the scheduler
-
     address private boss; //!< User that have super privileges on the system
 
     address private workMultiplierAddr; //!< Address of the contract that is responsible for managing multipliers
 
     address private workerContractAddr; //!< Address of the contract that is responsible for managing workers contracts
-
-    /// Definition of scheduler, this will check the number of blocks on
-    /// blockchain to sync with time worked by an employee
-    ///
-    /// @see Ethereum Alarm Clock (http://docs.ethereum-alarm-clock.com/en/latest/)
-    SchedulerInterface constant scheduler = SchedulerInterface(0x6C8f2A135f6ed072DE4503Bd7C4999a1a17F824B);
 
     /// Mapping employee's address to employee's record
     mapping(address => WorkerJourney) public records;
@@ -43,22 +35,6 @@ contract Journey {
         boss = msg.sender;
         workMultiplierAddr = _workMultiplierAddr;
         workerContractAddr = _workerContractAddr;
-        clk = 0;
-
-        uint lockedUntil = block.number + 5;
-        // TODO: Verificar constantes aleatórias que não sei se devo mexer:
-        uint[3] memory uintArgs = [
-            200000,      // the amount of gas that will be sent with the txn.
-            0,           // the amount of ether (in wei) that will be sent with the txn
-            lockedUntil // the first block number on which the transaction can be executed.
-        ];
-        // TODO: Passar msg.sender atual para a transação agendada
-        scheduler.scheduleTransaction(
-            address(this),  // The address that the transaction will be sent to.
-            "",    // The call data that will be sent with the transaction.
-            4,            // The number of blocks this will be executable.
-            uintArgs       // The tree args defined above
-        );
     }
 
     /**
@@ -67,47 +43,22 @@ contract Journey {
      * time worked by an employee
      */
     function enterRecord() public {
-        // Validar alguma coisa aqui?
         require(records[msg.sender].state == StateType.OUT, "Worker should be OUT to be able to enter");
         records[msg.sender].state = StateType.IN;
-        records[msg.sender].enteredAt = clk;
+        records[msg.sender].enteredAt = now;
     }
 
-    /**
-     * @dev Defines the behaviour of the scheduler
-     */
-    function() public {
-        clk++;
-
-        // Fazer schedule para incrementar workMinutes a cada 5 blocos
-        // Bloqueia por 5 blocos:
-        uint lockedUntil = block.number + 5;
-        uint[3] memory uintArgs = [
-            200000,      // the amount of gas that will be sent with the txn.
-            0,           // the amount of ether (in wei) that will be sent with the txn
-            lockedUntil // the first block number on which the transaction can be executed.
-        ];
-        // TODO: Passar msg.sender atual para a transação agendada
-        scheduler.scheduleTransaction(
-            address(this),  // The address that the transaction will be sent to.
-            "",             // The call data that will be sent with the transaction.
-            4,            // The number of blocks this will be executable.
-            uintArgs       // The tree args defined above
-        );
-    }
-
-    // Precisa ser chamado em algum momento....talvez no final do mês ou algo
-    // assim
     /**
      * @dev This function will compute all the time worked by an employee,
      * including overtime, and make payment accordingly, including bonuses for
      * overtime.
      */
-    function payWorker(address worker) public returns (uint result)   {
+    function payWorker(address worker) public  {
         require(boss == msg.sender, "Only boss can do payment");
         require(records[worker].state == StateType.OUT, "Worker should be out to do payment");
         WorkerContract workContract = WorkerContract(workerContractAddr);
-        result = records[worker].computedMinutes * workContract.getHourValue(worker);
+        uint value = records[worker].computedMinutes * workContract.getHourValue(worker);
+        worker.transfer(value);
         records[worker].realMinutes = 0;
     }
 
@@ -119,7 +70,7 @@ contract Journey {
         require(records[msg.sender].state == StateType.IN, "Worker should be IN to be able to left");
         records[msg.sender].state = StateType.OUT;
 
-        uint dif = clk - records[msg.sender].enteredAt;
+        uint dif = now - records[msg.sender].enteredAt;
 
         WorkMultiplier workMultiplier = WorkMultiplier(workMultiplierAddr);
 
@@ -130,7 +81,6 @@ contract Journey {
                 records[msg.sender].computedMinutes = records[msg.sender].computedMinutes + multiplier[1];
             }
         }
-
     }
 }
 
@@ -144,9 +94,6 @@ contract Journey {
 contract WorkerContract {
     /// Defines the characteristics of an employee
     struct Worker {
-        string name; //!< Employee's name
-        string cpf; //!< Employee's cpf ("natural persons register" or "cadastro
-                // de pessoas físicas", in portuguese)
         uint hour_value; //!< How much an employee earns per hour
         bool isRegistered; //!< A boolean to allow us to detect if the register
                 // is valid
@@ -166,29 +113,23 @@ contract WorkerContract {
 
     /**
      * @dev Returns the hour-value from a specific employee
-     * @param worker Unique value that defines an employee
+     * @param addr Address of the employee
      */
-    function getHourValue(address worker) public view returns (uint) {
+    function getHourValue(address addr) public view returns (uint) {
         require(msg.sender == boss, "Only the boss can edit workers");
-        require(workers[worker].isRegistered, "The worker does not exist, so it cannot be edited");
-        return workers[worker].hour_value;
+        require(workers[addr].isRegistered, "The worker does not exist, so it cannot be edited");
+        return workers[addr].hour_value;
     }
 
     /**
      * @dev Defines an employee and stores it in the structure 'workers'
-     * @param worker Unique value that defines an employee
-     * @param name Employee's name
-     * @param cpf Employee's cpf
+     * @param addr Address of the employee
      * @param hourValue Hour-Value specified for this employee
      */
-    function createWorker(address worker, string name, string cpf, uint hourValue) public {
+    function createWorker(address addr, uint hourValue) public {
         require(msg.sender == boss, "Only the boss can edit workers");
-        require(bytes(name).length > 0, "A worker must have a name");
-        require(bytes(cpf).length > 0, "A worker must have CPF");
-        require(!workers[worker].isRegistered, "The worker already exists, so it cannot be created");
-        workers[worker] = Worker({
-            name: name,
-            cpf: cpf,
+        require(!workers[addr].isRegistered, "The worker already exists, so it cannot be created");
+        workers[addr] = Worker({
             hour_value: hourValue,
             isRegistered: true
         });
@@ -196,23 +137,23 @@ contract WorkerContract {
 
     /**
      * @dev Edits some of employee's properties from the records
-     * @param worker Unique value that defines an employee
+     * @param addr Address of the employee
      * @param hourValue Hour-Value specified for this employee
      */
-    function editWorker(address worker, uint hourValue) public {
+    function editWorker(address addr, uint hourValue) public {
         require(msg.sender == boss, "Only the boss can edit workers");
-        require(workers[worker].isRegistered, "The worker does not exist, so it cannot be edited");
-        workers[worker].hour_value = hourValue;
+        require(workers[addr].isRegistered, "The worker does not exist, so it cannot be edited");
+        workers[addr].hour_value = hourValue;
     }
 
     /**
      * @dev Removes a worker from the records
-     * @param worker Unique value that defines an employee
+     * @param addr Address of the employee
      */
-    function removeWorker(address worker) public {
+    function removeWorker(address addr) public {
         require(msg.sender == boss, "Only the boss can remove workers");
-        require(workers[worker].isRegistered, "The worker does not exist, so it cannot be removed");
-        delete workers[worker];
+        require(workers[addr].isRegistered, "The worker does not exist, so it cannot be removed");
+        delete workers[addr];
     }
 }
 
@@ -282,26 +223,4 @@ contract WorkMultiplier {
         }
         revert("Multiplier not found");
     }
-}
-
-/**
- * @title SchedulerInterface
- *
- * Abstract contract for the scheduler
- */
-contract SchedulerInterface {
-    /**
-     * @dev Abstract contract for the Ethereum Alarm Clock
-     * @param toAddress Unique value to be applied
-     * @param callData All the data needed in the alarm
-     * @param windowSize The number of blocks this will be executable.
-     * @param uintArgs Extra arguments for the alarm:
-     *      - uintArgs[0] callGas
-     *      - uintArgs[1] callValue
-     *      - uintArgs[2] windowStart
-     */
-    function scheduleTransaction(address toAddress,
-                                 bytes callData,
-                                 uint8 windowSize,
-                                 uint[3] uintArgs) public returns (address);
 }
