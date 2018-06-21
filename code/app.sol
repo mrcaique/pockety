@@ -15,7 +15,6 @@ contract Journey {
         StateType state; //!< State of an employee (in or out)
         uint realMinutes; //!< Minimum working time for an employee (in minutes)
         uint computedMinutes; //!< Time worked by an employee (in minutes) with the multiplier applied
-        uint hourBank; //!< Every overtime in the work goes to hour bank
         uint enteredAt; //!< Time that the employee entered
     }
 
@@ -49,9 +48,9 @@ contract Journey {
     }
 
     /**
-     * @dev This function will compute all the time worked by an employee,
-     * including overtime, and make payment accordingly, including bonuses for
-     * overtime.
+     * @dev This function will do the payment based on all the time worked by an
+     * employee, including overtime, and make payment accordingly, including
+     * bonuses for overtime.
      */
     function payWorker(address worker) public  {
         require(boss == msg.sender, "Only boss can do payment");
@@ -60,6 +59,7 @@ contract Journey {
         uint value = records[worker].computedMinutes * workContract.getHourValue(worker);
         worker.transfer(value);
         records[worker].realMinutes = 0;
+        records[worker].computedMinutes = 0;
     }
 
     // Registra a saida do funcionário
