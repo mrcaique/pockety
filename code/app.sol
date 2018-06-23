@@ -14,15 +14,21 @@ contract Journey {
     struct WorkerJourney {
         StateType state; //!< State of an employee (in or out)
         uint realMinutes; //!< Minimum working time for an employee (in minutes)
-        uint computedMinutes; //!< Time worked by an employee (in minutes) with the multiplier applied
+        uint computedMinutes; //!< Time worked by an employee (in minutes) with
+                              // the multiplier applied
         uint enteredAt; //!< Time that the employee entered
+        bool isRegistered; //!< Check if the journey is registeredq in the first
+                           // place
     }
 
     address private boss; //!< User that have super privileges on the system
 
-    address private workMultiplierAddr; //!< Address of the contract that is responsible for managing multipliers
+    address private workMultiplierAddr; //!< Address of the contract that is
+                                        // responsible for managing multipliers
 
-    address private workerContractAddr; //!< Address of the contract that is responsible for managing workers contracts
+    address private workerContractAddr; //!< Address of the contract that is
+                                        // responsible for managing workers
+                                        // contracts
 
     /// Mapping employee's address to employee's record
     mapping(address => WorkerJourney) public records;
@@ -42,9 +48,10 @@ contract Journey {
      * time worked by an employee
      */
     function enterRecord() public {
-        require(records[msg.sender].state == StateType.OUT, "Worker should be OUT to be able to enter");
+        require(records[msg.sender].state == StateType.OUT || !records[msg.sender].isRegistered, "Worker should be OUT to be able to enter");
         records[msg.sender].state = StateType.IN;
         records[msg.sender].enteredAt = now;
+        records[msg.sender].isRegistered = true;
     }
 
     /**
@@ -56,7 +63,7 @@ contract Journey {
         require(boss == msg.sender, "Only boss can do payment");
         require(records[worker].state == StateType.OUT, "Worker should be out to do payment");
         WorkerContract workContract = WorkerContract(workerContractAddr);
-        uint value = records[worker].computedMinutes * workContract.getHourValue(worker);
+        uint value = records[worker].computedMinutes * workContract.getSecondValue(worker);
         worker.transfer(value);
         records[worker].realMinutes = 0;
         records[worker].computedMinutes = 0;
@@ -74,13 +81,33 @@ contract Journey {
 
         WorkMultiplier workMultiplier = WorkMultiplier(workMultiplierAddr);
 
-        for (uint i = 0; i < dif; i++) {
-            records[msg.sender].realMinutes = records[msg.sender].realMinutes+1;
-            uint[2] memory multiplier = workMultiplier.getMultiplier(msg.sender, records[msg.sender].realMinutes);
-            for (uint j = records[msg.sender].realMinutes; j <= multiplier[0]; j++) {
-                records[msg.sender].computedMinutes = records[msg.sender].computedMinutes + multiplier[1];
+
+        uint[2] memory multiplier = workMultiplier.getMultiplier(msg.sender, records[msg.sender].realMinutes);
+
+        uint realMinutes = records[msg.sender].realMinutes;
+        uint computedMinutes = records[msg.sender].computedMinutes;
+        for (uint i = 0; i < dif;) {
+            // Try to compute a possible number of seconds to process:
+            uint toAdd = dif-i;
+            if ((realMinutes+toAdd) > multiplier[0]) {
+                // If outside the actual range, add just the needed to go
+                // up to the end of the range
+                toAdd = multiplier[0]-realMinutes;
+            }
+            // Increment with the toAdd value computed
+            realMinutes += toAdd;
+            // Multiply each second added by the actual multiplier
+            computedMinutes += multiplier[1]*toAdd;
+            // Register what is already computed
+            i += toAdd;
+            if (i < dif) {
+                // Get the next multiplier in the range and cache it on memory
+                // But only if we are not THERE yet
+                multiplier = workMultiplier.getMultiplier(msg.sender, realMinutes+1);
             }
         }
+        records[msg.sender].realMinutes = realMinutes;
+        records[msg.sender].computedMinutes = computedMinutes;
     }
 }
 
@@ -94,9 +121,9 @@ contract Journey {
 contract WorkerContract {
     /// Defines the characteristics of an employee
     struct Worker {
-        uint hour_value; //!< How much an employee earns per hour
+        uint second_value; //!< How much an employee earns per hour
         bool isRegistered; //!< A boolean to allow us to detect if the register
-                // is valid
+                           // is valid
     }
 
     /// Mapping employee's address to employee itself
@@ -112,25 +139,27 @@ contract WorkerContract {
     }
 
     /**
-     * @dev Returns the hour-value from a specific employee
+     * @dev Returns the second-value from a specific employee
      * @param addr Address of the employee
      */
-    function getHourValue(address addr) public view returns (uint) {
-        require(msg.sender == boss, "Only the boss can edit workers");
+    function getSecondValue(address addr) public view returns (uint) {
+        // It would be ideal, but we cannot do that because msg.sender
+        // can be Journey...
+        // require(msg.sender == boss, "Only the boss can view workers");
         require(workers[addr].isRegistered, "The worker does not exist, so it cannot be edited");
-        return workers[addr].hour_value;
+        return workers[addr].second_value;
     }
 
     /**
      * @dev Defines an employee and stores it in the structure 'workers'
      * @param addr Address of the employee
-     * @param hourValue Hour-Value specified for this employee
+     * @param secondValue Second-Value specified for this employee
      */
-    function createWorker(address addr, uint hourValue) public {
+    function createWorker(address addr, uint secondValue) public {
         require(msg.sender == boss, "Only the boss can edit workers");
         require(!workers[addr].isRegistered, "The worker already exists, so it cannot be created");
         workers[addr] = Worker({
-            hour_value: hourValue,
+            second_value: secondValue,
             isRegistered: true
         });
     }
@@ -138,12 +167,12 @@ contract WorkerContract {
     /**
      * @dev Edits some of employee's properties from the records
      * @param addr Address of the employee
-     * @param hourValue Hour-Value specified for this employee
+     * @param secondValue Second-Value specified for this employee
      */
-    function editWorker(address addr, uint hourValue) public {
+    function editWorker(address addr, uint secondValue) public {
         require(msg.sender == boss, "Only the boss can edit workers");
         require(workers[addr].isRegistered, "The worker does not exist, so it cannot be edited");
-        workers[addr].hour_value = hourValue;
+        workers[addr].second_value = secondValue;
     }
 
     /**
@@ -194,6 +223,11 @@ contract WorkMultiplier {
      */
     function addMultiplier(address worker, uint min, uint max, uint multiplier) public {
         require(msg.sender == boss, "Only the boss can add multipliers");
+        for (uint i = 0; i < multipliers[worker].length; i++) {
+            if (!(multipliers[worker][i].max < min || max < multipliers[worker][i].min)) {
+                revert("The interval should not overlap with the intervals already registered on the system");
+            }
+        }
         multipliers[worker].push(Multiplier({
             min: min,
             max: max,
@@ -211,13 +245,13 @@ contract WorkMultiplier {
     }
 
     /**
-     * @dev Applies the respective multiplier on the employee's payment
+     * @dev Returns the multiplier and the max multiplier from a given employee
      * @param worker Unique value that defines an employee
      * @param realMinutes Overtime minutes that will be applied in the payment
      */
     function getMultiplier(address worker, uint realMinutes) public view returns (uint[2])  {
         for (uint i = 0; i < multipliers[worker].length; i++) {
-            if (multipliers[worker][i].min >= realMinutes && multipliers[worker][i].max <= realMinutes) {
+            if (multipliers[worker][i].min <= realMinutes && multipliers[worker][i].max >= realMinutes) {
                 return [multipliers[worker][i].max, multipliers[worker][i].multiplier];
             }
         }
