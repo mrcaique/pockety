@@ -61,10 +61,12 @@ contract Journey {
      */
     function payWorker(address worker) public  {
         require(boss == msg.sender, "Only boss can do payment");
-        require(records[worker].state == StateType.OUT, "Worker should be out to do payment");
+        require(records[worker].state == StateType.OUT || !records[msg.sender].isRegistered, "Worker should be OUT to do payment");
         WorkerContract workContract = WorkerContract(workerContractAddr);
         uint value = records[worker].computedMinutes * workContract.getSecondValue(worker);
-        worker.transfer(value);
+        if (value > 0) {
+            worker.transfer(value);
+        }
         records[worker].realMinutes = 0;
         records[worker].computedMinutes = 0;
     }
