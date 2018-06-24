@@ -31,7 +31,7 @@ contract Journey {
                                         // contracts
 
     /// Mapping employee's address to employee's record
-    mapping(address => WorkerJourney) public records;
+    mapping(address => WorkerJourney) private records;
 
     /**
      * @dev Defines the boss and starts the working day's contract
@@ -59,16 +59,23 @@ contract Journey {
      * employee, including overtime, and make payment accordingly, including
      * bonuses for overtime.
      */
-    function payWorker(address worker) public  {
+    function payWorker(address worker) public payable  {
         require(boss == msg.sender, "Only boss can do payment");
         require(records[worker].state == StateType.OUT || !records[msg.sender].isRegistered, "Worker should be OUT to do payment");
         WorkerContract workContract = WorkerContract(workerContractAddr);
         uint value = records[worker].computedMinutes * workContract.getSecondValue(worker);
+        records[worker].realMinutes = 0;
+        records[worker].computedMinutes = 0;
+        if (value > msg.value) {
+            revert("Value to be paid is bigger than wei sent with message");
+        }
+        uint toReturn = msg.value-value;
         if (value > 0) {
             worker.transfer(value);
         }
-        records[worker].realMinutes = 0;
-        records[worker].computedMinutes = 0;
+        if (toReturn > 0) {
+            msg.sender.transfer(toReturn);
+        }
     }
 
     // Registra a saida do funcionário
